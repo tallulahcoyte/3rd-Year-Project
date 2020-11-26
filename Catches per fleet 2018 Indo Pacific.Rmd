@@ -1,0 +1,141 @@
+---
+title: "Analysis of the Nominal Indo Pacific Ocean 2018 Data Set"
+author: "Tallulah Coyte"
+date: "23/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+devtools::install_github("thomasp85/patchwork")
+library(tidyverse)
+library(patchwork)
+indonom2018 <- read_csv("INDOPACIFIC2018/NOMINAL CATCHES PER FLEET, YEAR, GEAR, IOTC AREA AND SPECIES.csv")
+names(indonom2018)[names(indonom2018) == "Year/An"] <- "Year"
+```
+
+## Abstract
+
+A dataset which collects records of catches (number of catches and specie of catch) by their gear type, which region of the Indo Pacific Ocean and which nationality vessel caught the fish.
+
+## Cleaning the data
+
+To start I'm going to observe the names of the columns and what they include to see if I need to rename or delete any.
+
+```{r column names, echo = FALSE}
+colnames(indonom2018)
+```
+
+The columns 'Flotte', 'ZoneCTOI', 'TypePêcherie', 'Engin', 'GrGroupe', 'Espèce' and 'SpGroupe' are simply french translations of each columns column to the left, this is because the Indo Pacific Ocean is home to French territories (islands of Mayotte and La Réunion, the Scattered Islands and the French Southern and Antarctic Territories). However, as this analysis is being conducted in English, I am going to remove these columns.
+
+```{r reducing columns, echo = FALSE}
+indonom2018$Flotte <- NULL
+indonom2018$ZoneCTOI <- NULL
+indonom2018$TypePêcherie <- NULL
+indonom2018$Engin <- NULL
+indonom2018$GrGroupe <- NULL
+indonom2018$Espèce <- NULL
+indonom2018$SpGroupe <- NULL
+names(indonom2018)[names(indonom2018) == "Catch/Capture(t)"] <- "CatchCapt"
+```
+
+Now I'm going to plot the numerical classified variables to see if there are any outliers
+
+```{r plotting numerical variables for outliers, echo = FALSE}
+plot(indonom2018$CatchCapt)
+```
+
+There seem to be no outliers in this variable.
+
+## Number of catches against nationality.
+
+First, I want to see how many different values there are in the variable 'Fleet', as this will tell us how diverse the vessels are in terms of nationalities.
+
+```{r listing values in the variable Fleet, echo = FALSE}
+unique(indonom2018$Fleet)
+```
+
+There are 58 different nationalities of vessels, which implies just by the sheer volume of foreign vessels that the ocean is rich in marine life. I am now going to plot the number of catches against nationality of the vessel.
+
+```{r plotting nationality against number of catches, echo = FALSE}
+ggplot( indonom2018, aes(x = reorder(Fleet, -CatchCapt), y = CatchCapt)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, size = 5, vjust = 0.5, hjust=1)) + labs(title ="Bar plot of number of catches caught by each nation", x = "Fleets", y = "Catch/Capture in metric tonnes") 
+```
+
+From this we can see that the nationalities that catch most fish in the Indo Pacific are: Indonesia, India, Spain, and the Maldives. I now want to plot types of species caught against the 4 nations I mentioned prior. 
+
+```{r top four against species group, echo = FALSE}
+spain2018fleet <- indonom2018 %>%
+filter(Fleet == "EU.SPAIN")
+india2018fleet <- indonom2018 %>%
+filter(Fleet == "INDIA")
+indonesia2018fleet <- indonom2018 %>%
+filter(Fleet == "INDONESIA")
+maldives2018fleet <- indonom2018 %>%
+filter(Fleet == "MALDIVES")
+spaincatchplot <- ggplot( spain2018fleet, aes(Species, Fleet)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, size = 5, vjust = 0.5, hjust=1)) + labs(title ="Bar plot of species caught by Spanish fleets", x = "`Species", y = "Spanish fleet") 
+indiacatchplot <- ggplot( india2018fleet, aes(Species, Fleet)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, size = 5, vjust = 0.5, hjust=1)) + labs(title ="Bar plot of species caught by Indian fleets", x = "`Species", y = "Indian fleet")  
+indonesiacatchplot <- ggplot( indonesia2018fleet, aes(Species, Fleet)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, size = 5, vjust = 0.5, hjust=1)) + labs(title ="Bar plot of species caught by Indonesian fleets", x = "`Species", y = "Indonesian fleet")  
+maldivescatchplot <- ggplot( maldives2018fleet, aes(Species, Fleet)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, size = 5, vjust = 0.5, hjust=1)) + labs(title ="Bar plot of species caught by Maldivian fleets", x = "`Species", y = "Maldivian fleet") 
+```
+
+```{r four by four prior plot, echo = FALSE}
+spaincatchplot + indiacatchplot + indonesiacatchplot + maldivescatchplot
+```
+
+From this we can see that the most caught species in the top four nations is yellow tune and skipjack tuna, because of this and there being 5-7 species of tuna in the catch data we can infer that the Indo Pacific is a very tuna dense region. To investigate this further I will see how many of each species are caught in the data.
+
+## How many of each species  are caught?
+
+To analyse this I will plot the number of catches against species type,  plotting number of catches on the y axis against the species type.
+
+```{r species against total catch, echo = FALSE}
+ggplot( indonom2018, aes(Species, CatchCapt)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, size = 5, vjust = 0.5, hjust=1)) + labs(title ="Bar plot of species frequencies in catches from 1950-2018", x = "Species", y = "Catch/Capture in metric tonnes") 
+```
+
+We can see that the most caught species are, as the same for the top four nations by catch, yellow tuna and skipjack tuna. I now want to analyse the gear that has been used and see if there is any correlation. Before investigated the correlation I want to simply plot gear type against total catch number
+
+```{r gear against catch, echo = FALSE}
+ggplot( indonom2018, aes(Gear, CatchCapt)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, size = 5, vjust = 0.5, hjust=1)) + labs(title ="Bar plot of gear used to catch all species from 1950-2018", x = "Gear", y = "Catch/Capture in metric tonnes") 
+```
+
+Upon observation the most frequently used gear types are 'Gillet', 'Purse seine' and 'Longline'. I now want to see if there is any correlation between the two most caught fish (skipjack tuna and yellow tuna) and the 'Gillet' gear.
+
+```{r popular fish against gillet gear, echo = FALSE}
+yellowfintuna2018 <- indonom2018 %>%
+  filter( Species == "Yellowfin tuna")
+skipjacktuna2018 <- indonom2018 %>%
+  filter(Species == "Skipjack tuna")
+yelltunagearplot <- ggplot( yellowfintuna2018, aes(Gear, CatchCapt)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, size = 5, vjust = 0.5, hjust=1))
+skiptunagearplot <- ggplot( skipjacktuna2018, aes(Gear, CatchCapt)) + geom_bar(stat = "identity") + theme(axis.text.x = element_text(angle = 90, size = 5, vjust = 0.5, hjust=1))  
+```
+
+```{r yellow and skipjack against gear box, echo = FALSE}
+yell_skiptuna2018 <- rbind( yellowfintuna2018, skipjacktuna2018)
+ggplot(yell_skiptuna2018, aes(x = Gear, y = CatchCapt, fill = Species)) + 
+     geom_bar(stat = "identity", position = "dodge") + theme(axis.text.x = element_text(angle = 90, size = 5, vjust = 0.5, hjust=1)) + facet_wrap(~Species) + labs(title ="Bar plot of gear used to catch yellowfin and skipjack tuna", x = "Gear", y = "Catch/Capture in metric tonnes") 
+```
+
+Unexpectedly the skipjack tuna and yellowfin tuna both have different types of gear used to catch them. The skipjack tuna is typically caught by 'Bailboat' and 'Purse Seine', compared to the yellowfin tuna which is typically caught with 'Longline' or 'Offshore gillnet'.Perhaps this is because these fish are found in different areas of the Indo-Pacific. There are only two values in the area related columns, namingly the west indian ocean and eastern indian ocean, hence there is not enough geograhpic information to make a map of the data.
+
+```{r catch of all species over the time period, echo = FALSE}
+ggplot( indonom2018, aes(x = Year, y = CatchCapt, color = Gear)) + geom_jitter() + labs(title ="Individual catch weights of all species from 1950-2018", x = "Year", y = "Catch/Capture in metric tonnes") 
+```
+
+We can see that some gear types such as handlines and harpoons have been used fairly consistently (yielding median catches) over the time frame, in comparison to types such as baitboats where they have been more frequently used in the 21st century, implying that the industrialisation and commercialisation of fishing practices have changed the way that fish are caught.
+
+```{r catch of yellowfin tuna over the time period, echo = FALSE}
+ggplot( yellowfintuna2018, aes(x = Year, y = CatchCapt, color = Gear)) + geom_jitter() + labs(title ="Individual catch weights of yellowfin tuna from 1950-2018", x = "Year", y = "Catch/Capture in metric tonnes") 
+```
+
+From the above graph we can see that from 1980-2018 the most effective gear type when catching yellowfin tuna is 'Purse Seine', which is a vertical net 'curtain' used to surround a school of fish. However the most frequent gear type used is 'Longline Fresh', but these generally only (by observation of the plot) yield a maximum catch of 60 metric tons, so aren't the most effective on a commercial level.
+
+```{r catch of all skipjack tuna over the  time period, echo = FALSE}
+ggplot( skipjacktuna2018, aes(x = Year, y = CatchCapt, color = Gear)) + geom_jitter() + labs(title ="Individual catch weights of skipjack tuna from 1950-2018", x = "Year", y = "Catch/Capture in metric tonnes") 
+```
+
+The gear type used most frequently when fishing for skipjack tuna is 'Baitboat' and 'Purse Seine', both of which yield quite high catches. However the purse seine has only been used since 1980 in comparison to baitboats which have been used throughout the time frame.
+
+
+
+
+
