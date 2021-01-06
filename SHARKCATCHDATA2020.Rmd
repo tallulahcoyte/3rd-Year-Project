@@ -1,0 +1,51 @@
+---
+title: "Shark Catch Data GBR July-October 2020"
+author: "Tallulah Coyte"
+date: "06/01/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(readr)
+```
+
+## Shark Catch
+
+The purpose of this analysis is to scratch the surface on the presence of predatory fish in the Great Barrier Reef (GBR). Whilst sharks aren't necessarily fished to the extent of other fish, it will give me an insight into which sharks are most present in the GBR and most importantly where. This will give me a small foundation to work off in coming data analyses to see if their is a relation between the number of sharks and benthic algae cover.
+
+Not as in depth as previous work, am currently studying for my exams starting on the 11th January, and a few days ago finally sent off my post grad application (please pray that I get in, I've been prepping to apply to this uni since July).
+
+```{r cars, echo = FALSE}
+sharkcatchgbrjulyocttwenty <- read_csv("~/3rd-Year-Project/sharkcatchgbrjulyocttwenty.csv", col_types = cols(Date = col_date(format = "%d/%m/%Y")))
+sharkcatch <- sharkcatchgbrjulyocttwenty
+sharkcatch <- sharkcatch %>%
+  rename( date = Date, area = Area, location = Location, normname = 'Common Name', latinname = 'Species Name', fate = Fate, rfe = 'Reason for euthanasia', marinepark = 'Marine Park')
+```
+
+## Plots
+
+Seeing the frequency of different types of sharks.
+
+```{r pressure, echo=FALSE}
+b <- ggplot(sharkcatch, aes(normname))
+b + geom_bar() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+The most common species of sharks caught in the time frame (in descending order) are: tiger sharks, bull whaler and spot-tail whaler. I'm now going to see where these sharks are most commonly caught geographically.
+
+```{r geographic, echo = FALSE}
+tigersharks <- subset(sharkcatch, normname == "TIGER SHARK")
+ts <- ggplot(tigersharks, aes(location))
+ts + geom_bar() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+bullwhaler <- subset(sharkcatch, normname == "BULL WHALER")
+bw <- ggplot(bullwhaler, aes(location))
+bw + geom_bar() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+spottail <- subset(sharkcatch, normname == "SPOT-TAIL WHALER")
+st <- ggplot(spottail, aes(location))
+st + geom_bar() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+Tiger sharks are most prevalent in Horseshoe bay, as are spot-tail whalers. Bull whalers are most present in Tannum sands.
